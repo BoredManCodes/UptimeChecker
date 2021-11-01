@@ -6,6 +6,9 @@ import asyncio
 from decouple import config
 import winrt.windows.ui.notifications as notifications
 import winrt.windows.data.xml.dom as dom
+import traceback
+import logging
+
 
 app = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe'
 nManager = notifications.ToastNotificationManager
@@ -35,17 +38,22 @@ print("Using heartbeat URL: " + url + ". Sending a heartbeat every", formatted_i
 
 
 async def send_beat():
-    r = requests.get(url)
     while True:
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        print("Current Time =", current_time)
-        if "ok" in r.text:
-            await successful()
-        else:
+        try:
+            r = requests.get(url)
+            now = datetime.now()
+            current_time = now.strftime("%H:%M:%S")
+            print("Current Time =", current_time)
+            if "ok" in r.text:
+                await successful()
+            else:
+                await failed()
+            print("Waiting", str(formatted_interval), "minutes before sending next heartbeat")
+            await asyncio.sleep(corrected_interval)
+        except Exception as e:
             await failed()
-        print("Waiting", str(formatted_interval), "minutes before sending next heartbeat")
-        await asyncio.sleep(corrected_interval)
+
+
 
 
 async def failed():
@@ -62,16 +70,23 @@ async def successful():
 
 
 def send_manual(systray):
-    r = requests.get(url)
-    if "ok" in r.text:
-        print("Successfully sent manual heartbeat")
-        systray.update(hover_text="Heartbeat Sent", icon='heart.ico')
-        time.sleep(5)
-        systray.update(hover_text="Trent's Computer Uptime Heartbeat", icon='icon.ico')
-    else:
+    try:
+        r = requests.get(url)
+        if "ok" in r.text:
+            print("Successfully sent manual heartbeat")
+            systray.update(hover_text="Heartbeat Sent", icon='heart.ico')
+            time.sleep(5)
+            systray.update(hover_text="Trent's Computer Uptime Heartbeat", icon='icon.ico')
+        else:
+            print("An error occurred and heartbeat couldn't be sent")
+            notifier.show(notifications.ToastNotification(xDoc))
+            systray.update(hover_text="Heartbeat Failed", icon='error.ico')
+    except:
         print("An error occurred and heartbeat couldn't be sent")
         notifier.show(notifications.ToastNotification(xDoc))
         systray.update(hover_text="Heartbeat Failed", icon='error.ico')
+
+
 
 
 menu_options = (("Send manual heartbeat", None, send_manual),)
