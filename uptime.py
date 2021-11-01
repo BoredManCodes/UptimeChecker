@@ -75,7 +75,7 @@ def send_manual(systray):
         if "ok" in r.text:
             print("Successfully sent manual heartbeat")
             systray.update(hover_text="Heartbeat Sent", icon='heart.ico')
-            time.sleep(5)
+            time.sleep(5) # this hangs the program, but works to limit how quickly you can send :)
             systray.update(hover_text="Trent's Computer Uptime Heartbeat", icon='icon.ico')
         else:
             print("An error occurred and heartbeat couldn't be sent")
