@@ -4,32 +4,6 @@ import requests
 from infi.systray import SysTrayIcon
 import asyncio
 from decouple import config
-import winrt.windows.ui.notifications as notifications
-import winrt.windows.data.xml.dom as dom
-import traceback
-import logging
-
-
-app = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe'
-nManager = notifications.ToastNotificationManager
-notifier = nManager.create_toast_notifier(app)
-tString = """
-  <toast>
-    <visual>
-      <binding template='ToastGeneric'>
-        <text>Heartbeat Monitor</text>
-        <text>Shit. Something went wrong, you are probably sending requests too quickly</text>
-      </binding>
-    </visual>
-    <actions>
-      <action
-        content="Dismiss"
-        arguments="action=dismiss"/>
-    </actions>        
-  </toast>
-"""
-xDoc = dom.XmlDocument()
-xDoc.load_xml(tString)
 url = config("URL")
 interval = int(config("INTERVAL"))
 formatted_interval = interval / 60
@@ -58,7 +32,6 @@ async def send_beat():
 
 async def failed():
     print("An error occurred and heartbeat couldn't be sent")
-    notifier.show(notifications.ToastNotification(xDoc))
     systray.update(hover_text="Heartbeat Failed", icon='error.ico')
 
 
@@ -79,14 +52,10 @@ def send_manual(systray):
             systray.update(hover_text="Trent's Computer Uptime Heartbeat", icon='icon.ico')
         else:
             print("An error occurred and heartbeat couldn't be sent")
-            notifier.show(notifications.ToastNotification(xDoc))
             systray.update(hover_text="Heartbeat Failed", icon='error.ico')
     except:
         print("An error occurred and heartbeat couldn't be sent")
-        notifier.show(notifications.ToastNotification(xDoc))
         systray.update(hover_text="Heartbeat Failed", icon='error.ico')
-
-
 
 
 menu_options = (("Send manual heartbeat", None, send_manual),)
